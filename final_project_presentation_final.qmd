@@ -1,0 +1,461 @@
+---
+title: "Stats115_presentation"
+format: revealjs
+editor: visual
+---
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(bayesrules)
+library(bayesplot)
+library(tidybayes)
+library(rstanarm)
+library(tidyverse)
+library(rstan)
+library(brms)     
+library(tidyr)
+library(patchwork)
+library(broom.mixed)
+```
+
+# Abalone Age Prediction Final Project
+
+Group Member: Peter, Alvin, Shavonne, Matthew
+
+## Introduction:
+
+Abalone are large marine gastropod mollusks that are sought after for their shells and their meat, and were once considered a food staple for many indigenous cultures around the world. While abundant in numbers during the 20th century, decades of overfishing, climate change and disease have decimated wild abalone populations, and they are at risk of extinction. According to an article titled "All West Coast Abalone at Risk of Extinction on the IUCN Red List" posted to the UC Davis website by Kat Kerlin, as of 2022, all 7 of the US abalone species that live on the West Coast have been listed as either Critically Endangered or Endangered by the International Union for Conservation of Nature. In California alone, warming ocean temperatures and mass decline of kelp forests have dramatically affected wild abalone populations. It is important for us to play a role in abalone conservation efforts, and save them from extinction before they are lost from the world forever.
+
+## Dataset Description
+
+The Abalone dataset:
+
+Collected from 1994 from Tasmania Coast, where the abalone species is indicate as *Haliotis species*
+
+Contained 9 prediction features. Obtained the actual age (in years) by adding 1.5 to the rings parameter
+
+```{r}
+
+# read the dataset into a data frame
+data <- read.csv("http://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data", header=FALSE)
+
+# add column names
+names(data) <- c("sex", "length", "diameter", "height", "weight.whole",
+    "weight.shucked", "weight.viscera", "weight.shell", "rings")
+
+# Add a new column 'Age' to the data by adding 1.5 to the 'Rings' column 
+# This represent the actual abalone years
+data$age <- data$rings + 1.5
+
+head(data)
+```
+
+## Data Exploration
+
+```{r}
+
+# Function to generate plot
+generate_plot <- function(data, x_var) {
+  data %>%
+    ggplot(aes_string(x = x_var, y = "age",color="sex")) +
+    geom_point(data = data, size = 0.75)+
+    labs(x = x_var, y = "Age")   # Adjust y-axis label as needed
+}
+
+plot_length <- generate_plot(data, "length")
+plot_diameter <- generate_plot(data,"diameter")
+plot_height <- generate_plot(data, "height")
+plot_whole <- generate_plot(data, "weight.whole")
+plot_shucked <- generate_plot(data, "weight.shucked")
+plot_viscera <- generate_plot(data, "weight.viscera")
+plot_shell <- generate_plot(data, "weight.shell")
+
+# Arrange plots side by side
+combined_plots <- plot_length + plot_diameter + plot_height + plot_whole + plot_shucked + plot_viscera + plot_shell
+
+combined_plots
+# Scatter Plot
+# Scatter Plot
+# for (col in numerical_cols) {
+#   plot <- ggplot(data, aes_string(x = col, y = "age", color="sex")) +
+#     geom_point(size=2) +
+#     labs(x = col, y = "Age") +  # Adjust y-axis label as needed
+#     ggtitle(paste("Scatter Plot of Age vs", col))
+#   
+#   print(plot)
+# }
+
+```
+
+## Research Question
+
+What are the significant features or set of features in predicting and analyzing the Age (in years) of abalone?
+
+To examine this question more closely, we decided to construct the posterior simulation for single features fit and also extend to multiple features fit.
+
+## Prior
+
+Examined the mean age of *Haliotis* species type, in which typical age of abalone ranges from 10 years olds, and able to live up to at most 30-40 years old. We will denote our prior understanding with $N(10,5)$
+
+```{r}
+plot_normal(10,5)
+```
+
+sources: <https://www.treehugger.com/abalone-facts-5180643>
+
+## Regression Models
+
+| Model   | Formula               |
+|---------|-----------------------|
+| Model 1 | age \~ length         |
+| Model 2 | age \~ diameter       |
+| Model 3 | age \~ height         |
+| Model 4 | age \~ weight.whole   |
+| Model 5 | age \~ weight.shucked |
+| Model 6 | age \~ weight.viscera |
+| Model 7 | age \~ weight.shell   |
+
+```{r}
+abalone_model_length <- stan_glm(age ~ length, data = data,
+                       family = gaussian,
+                       prior_intercept = normal(10, 5),
+                       chains = 4, iter = 5000*2, seed = 84735,
+                       refresh = FALSE)
+```
+
+```{r}
+abalone_model_diameter <- stan_glm(age ~ diameter, data = data,
+                       family = gaussian,
+                       prior_intercept = normal(10, 5),
+                       chains = 4, iter = 5000*2, seed = 84735,
+                       refresh = FALSE)
+
+```
+
+```{r}
+abalone_model_height <- stan_glm(age ~ height, data = data,
+                       family = gaussian,
+                       prior_intercept = normal(10, 5),
+                       chains = 4, iter = 5000*2, seed = 84735,
+                       refresh = FALSE)
+```
+
+```{r}
+abalone_model_whole <- stan_glm(age ~ weight.whole, data = data,
+                       family = gaussian,
+                       prior_intercept = normal(10, 5),
+                       chains = 4, iter = 5000*2, seed = 84735,
+                       refresh = FALSE)
+
+```
+
+```{r}
+abalone_model_shucked <- stan_glm(age ~ weight.shucked, data = data,
+                       family = gaussian,
+                       prior_intercept = normal(10, 5),
+                       chains = 4, iter = 5000*2, seed = 84735,
+                       refresh = FALSE)
+
+```
+
+```{r}
+abalone_model_viscera <- stan_glm(age ~ weight.viscera, data = data,
+                       family = gaussian,
+                       prior_intercept = normal(10, 5),
+                       chains = 4, iter = 5000*2, seed = 84735,
+                       refresh = FALSE)
+
+```
+
+```{r}
+abalone_model_shell <- stan_glm(age ~ weight.shell, data = data,
+                       family = gaussian,
+                       prior_intercept = normal(10, 5),
+                       chains = 4, iter = 5000*2, seed = 84735,
+                       refresh = FALSE)
+```
+
+## Plot of Regression Model
+
+```{r}
+
+# Function to generate plot
+generate_plot <- function(data, model, x_var) {
+  data %>%
+    tidybayes::add_fitted_draws(model, n = 100) %>%
+    ggplot(aes_string(x = x_var, y = "age")) +
+    geom_line(aes(y = .value, group = .draw), alpha = 0.15) +
+    geom_point(data = data, size = 0.05)
+}
+
+# Generate plots for different variables
+plot_length <- generate_plot(data, abalone_model_length, "length")
+plot_diameter <- generate_plot(data, abalone_model_diameter, "diameter")
+plot_height <- generate_plot(data, abalone_model_height, "height")
+plot_whole <- generate_plot(data, abalone_model_whole, "weight.whole")
+plot_shucked <- generate_plot(data, abalone_model_shucked, "weight.shucked")
+plot_viscera <- generate_plot(data, abalone_model_viscera, "weight.viscera")
+plot_shell <- generate_plot(data, abalone_model_shell, "weight.shell")
+
+# Arrange plots side by side
+combined_plots <- plot_length + plot_diameter + plot_height + plot_whole + plot_shucked + plot_viscera + plot_shell
+
+combined_plots
+```
+
+## Credible Intervals
+
+```{r}
+##################
+# Tidy CI
+##################
+vars <- c("length", "diameter", "height", "weight.whole", "weight.shucked", "weight.viscera", "weight.shell")
+
+model <- list(abalone_model_length, abalone_model_diameter, abalone_model_height, abalone_model_whole, abalone_model_shucked, abalone_model_viscera, abalone_model_shell)
+
+estimate = c()
+se = c()
+conf_low = c()
+conf_high = c()
+
+for (i in seq(1:7)){
+  
+  ci <- tidy(model[[i]], effects = "fixed", 
+             conf.int = TRUE, conf.level = 0.95)
+  
+  estimate <- append(estimate, ci[2,]$estimate)
+  se <- append(se, ci[2,]$std.error)
+  conf_low <- append(conf_low, ci[2,]$conf.low)
+  conf_high <- append(conf_high, ci[2,]$conf.high)
+}
+df2 <- data.frame(vars, estimate, se, conf_low, conf_high)
+df2_sorted <- df2 %>%
+  arrange(desc(estimate))
+
+# Display the sorted data frame
+df2_sorted
+```
+
+Based on the models and credible interval, we can tell that height has the greatest effect on age. We are 95% confident that for every 0.1 unit increase in height, age increases by 4.29.
+
+## MAE
+
+```{r}
+model_length_summary <- prediction_summary(abalone_model_length, data=data)
+model_diameter_summary <- prediction_summary(abalone_model_diameter, data=data)
+model_height_summary <- prediction_summary(abalone_model_height, data=data)
+model_wholewgt_summary <- prediction_summary(abalone_model_whole, data=data)
+model_shuckedwgt_summary <- prediction_summary(abalone_model_shucked, data=data)
+model_viscerawgt_summary <- prediction_summary(abalone_model_viscera, data=data)
+model_shellwgt_summary <- prediction_summary(abalone_model_shell, data=data)
+
+
+#################################
+# Mae prediction summary
+#################################
+vars <- c("length", "diameter", "height", "weight.whole", "weight.shucked", "weight.viscera", "weight.shell")
+# i.e. model_length_summary <- prediction_summary(modelx, data=data)
+# Where modelx is the respective bayesian model with a single predictor
+model <- list(model_length_summary, model_diameter_summary, model_height_summary, model_wholewgt_summary, model_shuckedwgt_summary, model_viscerawgt_summary, model_shellwgt_summary)
+
+mae = c()
+mae_scaled = c()
+within50 = c()
+within95 = c()
+
+for (i in seq(1:7)){
+  mae <- append(mae, model[[i]]$mae)
+  mae_scaled <- append(mae_scaled, model[[i]]$mae_scaled)
+  within50 <- append(within50, model[[i]]$within_50)
+  within95 <- append(within95, model[[i]]$within_95)
+}
+df <- data.frame(vars, mae, mae_scaled, within50, within95)
+ranked_df <- df[order(df$mae_scaled), ]
+ranked_df
+```
+
+The lowest Mean Absolute Error Scaled indicates that a model with the single parameter height matches the observed model the best. The within50 column tells us that the height model contains 61% of observed values within the 50% CI of our estimated values, higher than the others in accuracy.
+
+## ELPD Models
+
+| Model   | Formula                                                                                                                  |
+|---------|--------------------------------------------------------------------------------------------------------------------------|
+| Model 1 | age \~ height + length + diameter + height\*length\*diameter                                                             |
+| Model 2 | age \~ height+ diameter + weight.viscera + height\*diameter\*weight.viscera                                              |
+| Model 3 | age \~ height +diameter + weight.shell + height\*diameter\*weight.shell                                                  |
+| Model 4 | age \~ height +diameter + length + weight.viscera + height\*diameter\*length\*weight.viscera                             |
+| Model 5 | age \~ height+diameter + length + weight.shell + height\*diameter\*length\*weight.shell                                  |
+| Model 6 | age \~ height+diameter + weight.viscera + weight.shell + height\*diameter\*weight.viscera\*weight.shell                  |
+| Model 7 | age \~ height+diameter + length + weight.viscera + weight.shell + height\*diameter\*length\*weight.viscera\*weight.shell |
+| Model 8 | age \~ height + diameter + height\*diameter                                                                              |
+| Model 9 | age \~ height                                                                                                            |
+
+## ELPD Estimation
+
+```{r}
+set.seed(84735)
+
+#length X diameter
+model_1 <- stan_glm(age ~ height + length + diameter + height*length*diameter , 
+                            data = data, 
+                            family = gaussian, 
+                            prior_intercept = normal(10, 5), 
+                            chains = 4, 
+                            iter = 5000*2, refresh = FALSE,
+                            seed = 84735)
+
+posterior_model_1 <- update(model_1, prior_PD = FALSE)
+```
+
+```{r}
+set.seed(84735)
+
+#model 2, diameter X weight.viscera
+model_2 <- stan_glm(age ~ height+ diameter + weight.viscera + height*diameter*weight.viscera, 
+                            data = data, 
+                            family = gaussian, 
+                            prior_intercept = normal(10, 5), 
+                            chains = 4, 
+                            iter = 5000*2, refresh = FALSE,
+                            seed = 84735)
+
+posterior_model_2 <- update(model_2, prior_PD = FALSE)
+```
+
+```{r}
+set.seed(84735)
+
+#diameter X weight.shell
+model_3 <- stan_glm(age ~ height +diameter + weight.shell + height*diameter*weight.shell, 
+                            data = data, 
+                            family = gaussian, 
+                            prior_intercept = normal(10, 5), 
+                            chains = 4, 
+                            iter = 5000*2, refresh = FALSE,
+                            seed = 84735)
+
+posterior_model_3 <- update(model_3, prior_PD = FALSE)
+```
+
+```{r}
+set.seed(84735)
+
+#diameter X length X weight.viscera
+model_4 <- stan_glm(age ~ height +diameter + length + weight.viscera + height*diameter*length*weight.viscera, 
+                            data = data, 
+                            family = gaussian, 
+                            prior_intercept = normal(10, 5), 
+                            chains = 4, 
+                            iter = 5000*2, refresh = FALSE,
+                            seed = 84735)
+
+posterior_model_4 <- update(model_4, prior_PD = FALSE)
+```
+
+```{r}
+set.seed(84735)
+
+#diameter X length X shell
+model_5 <- stan_glm(age ~ height+diameter + length + weight.shell + height*diameter*length*weight.shell, 
+                            data = data, 
+                            family = gaussian, 
+                            prior_intercept = normal(10, 5), 
+                            chains = 4, 
+                            iter = 5000*2, refresh = FALSE,
+                            seed = 84735)
+
+posterior_model_5 <- update(model_5, prior_PD = FALSE)
+
+```
+
+```{r}
+set.seed(84735)
+
+#diameter X viscera X shell
+model_6 <- stan_glm(age ~ height+diameter + weight.viscera + weight.shell + height*diameter*weight.viscera*weight.shell, 
+                            data = data, 
+                            family = gaussian, 
+                            prior_intercept = normal(10, 5), 
+                            chains = 4, 
+                            iter = 5000*2, refresh = FALSE,
+                            seed = 84735)
+
+posterior_model_6 <- update(model_6, prior_PD = FALSE)
+```
+
+```{r}
+set.seed(84735)
+#diameter X length X viscera X shell
+model_7 <- stan_glm(age ~ height+diameter + length + weight.viscera + weight.shell + height*diameter*length*weight.viscera*weight.shell,
+                            data = data, 
+                            family = gaussian, 
+                            prior_intercept = normal(10, 5), 
+                            chains = 4, 
+                            iter = 5000*2, refresh = FALSE,
+                            seed = 84735)
+
+posterior_model_7 <- update(model_7, prior_PD = FALSE)
+```
+
+```{r}
+set.seed(84735)
+#diameter
+model_8 <- stan_glm(age ~ height + diameter + height*diameter,
+                            data = data, 
+                            family = gaussian, 
+                            prior_intercept = normal(10, 5), 
+                            chains = 4, 
+                            iter = 5000*2, refresh = FALSE,
+                            seed = 84735)
+
+posterior_model_8 <- update(model_8, prior_PD = FALSE)
+```
+
+```{r}
+set.seed(84735)
+#just height
+model_9 <- stan_glm(age ~ height,
+                            data = data, 
+                            family = gaussian, 
+                            prior_intercept = normal(10, 5), 
+                            chains = 4, 
+                            iter = 5000*2, refresh = FALSE,
+                            seed = 84735)
+
+posterior_model_9 <- update(model_9, prior_PD = FALSE)
+```
+
+```{r}
+set.seed(84735)
+loo_1 <- loo(posterior_model_1)
+loo_2 <- loo(posterior_model_2)
+loo_3 <- loo(posterior_model_3)
+loo_4 <- loo(posterior_model_4)
+loo_5 <- loo(posterior_model_5)
+loo_6 <- loo(posterior_model_6)
+loo_7 <- loo(posterior_model_7)
+loo_8 <- loo(posterior_model_8)
+loo_9 <- loo(posterior_model_9)
+loo_compare(loo_1, loo_2, loo_3, loo_4, loo_5, loo_6, loo_7, loo_8, loo_9)
+```
+
+Based on the elpd comparison, model 7 - Age \~ height+diameter + length + weight.viscera + weight.shell + height\*diameter\*length\*weight.viscera\*weight.shell has the greatest elpd (0), reflect the best posterior predictive accuracy.
+
+## Conclusion
+
+Based on our analysis from the regression models, credible intervals, MAE summary, and ELPD estimations, we have found that height is the most significant predictor affecting our response age, with diameter, length, viscera weight, and shell weight as the next most significant.
+
+The model comparisons inform us that model 7 demonstrates the highest posterior predictive accuracy without applying every single predictor.
+
+## Limitations
+
+With more times and resources, we can extend on these refinement
+
+-   We would run every single possible model (we didn't have the time to do this, already takes 2 hours to run ours)
+
+-   Dataset is dated from 1994, so we would collect data from abalone in 2024
+
+## Future Direction
+
+Our Bayesian models might help researchers and marine biologists understand the relationship between abalone age and its other physical measurements, and better develop their knowledge of abalone. Our results can aid in the future establishment and operations of abalone conservation efforts, and also development of breeding programs
