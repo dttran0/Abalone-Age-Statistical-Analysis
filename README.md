@@ -1,3 +1,9 @@
+## Usage
+The document is in R markdown quarto documentation file
+Our Abalone dataset was obtain from the UCI ML Repository [link] https://archive.ics.uci.edu/dataset/1/abalone
+
+
+
 ## Introduction:
 Abalone are large marine gastropod mollusks that are sought after for their shells and their meat, and were once considered a food staple for many indigenous culturesaround the world. While abundant in 
 numbers during the 20th century, decades of overfishing, climate change and disease have decimated wild abalone populations,and they are at risk of extinction. According to an article titled "All West Coast Abalone
